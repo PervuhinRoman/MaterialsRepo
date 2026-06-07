@@ -1,0 +1,41 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+
+# Виртуальное окружение
+.venv/
+venv/
+env/
+
+# Переменные окружения
+.env
+
+# Alembic — скомпилированные файлы не нужны
+alembic/versions/__pycache__/
+
+# Загруженные файлы пользователей
+uploads/
+
+# Pytest
+.pytest_cache/
+htmlcov/
+.coverage
+coverage.xml
+
+# PyCharm
+.idea/
+
+# macOS
+.DS_Store
+
+# Locust
+locust_report/
+
+# Docker
+*.log
