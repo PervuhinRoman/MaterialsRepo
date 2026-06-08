@@ -1,15 +1,24 @@
 import 'package:go_router/go_router.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:materials_repo/core/auth/auth_state.dart';
 
 import '../../../core/auth/auth_notifier.dart';
 import '../data/categories_repository.dart';
 import '../data/materials_provider.dart';
+import '../data/materials_repository.dart';
 import '../domain/category.dart';
 import '../domain/material.dart' as domain;
 
 class MaterialsListScreen extends ConsumerStatefulWidget {
-  const MaterialsListScreen({super.key});
+  const MaterialsListScreen({
+    super.key,
+    this.showActions = false, // true — страница «Преподавателям»
+    this.filterByCurrentUser = false, // true — только свои материалы
+  });
+
+  final bool showActions;
+  final bool filterByCurrentUser;
 
   @override
   ConsumerState<MaterialsListScreen> createState() =>
@@ -32,11 +41,55 @@ class _MaterialsListScreenState extends ConsumerState<MaterialsListScreen> {
   Widget build(BuildContext context) {
     final materialsAsync = ref.watch(materialsListProvider);
     final categoriesAsync = ref.watch(categoriesListProvider);
+    final authState = ref.watch(authProvider);
+
+    final currentUserId = authState.when(
+      loading: () => '',
+      unauthenticated: () => '',
+      authenticated: (user) => user.id,
+    );
+
+    final role = authState.when(
+      loading: () => '',
+      unauthenticated: () => '',
+      authenticated: (user) => user.role,
+    );
 
     return Material(
       child: Column(
         children: [
-          // Поиск + фильтр категорий
+          // Заголовок для страницы преподавателя
+          if (widget.showActions)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+              child: Row(
+                children: [
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Мои материалы',
+                        style: Theme.of(context).textTheme.headlineSmall,
+                      ),
+                      Text(
+                        'Управляйте своими загруженными материалами',
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const Spacer(),
+                  FilledButton.icon(
+                    onPressed: () => context.go('/upload'),
+                    icon: const Icon(Icons.upload_file_outlined),
+                    label: const Text('Загрузить материал'),
+                  ),
+                ],
+              ),
+            ),
+
+          // Поиск + фильтр + переключение вида
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
             child: Row(
@@ -63,7 +116,6 @@ class _MaterialsListScreenState extends ConsumerState<MaterialsListScreen> {
                   ),
                 ),
                 const SizedBox(width: 12),
-                // Фильтр по категории
                 categoriesAsync.when(
                   loading: () => const SizedBox(
                     width: 24,
@@ -77,12 +129,17 @@ class _MaterialsListScreenState extends ConsumerState<MaterialsListScreen> {
                     onChanged: (id) => setState(() => _selectedCategoryId = id),
                   ),
                 ),
+                const SizedBox(width: 8),
+                IconButton(
+                  icon: Icon(_isGridView ? Icons.list : Icons.grid_view),
+                  tooltip: _isGridView ? 'Список' : 'Сетка',
+                  onPressed: () => setState(() => _isGridView = !_isGridView),
+                ),
               ],
             ),
           ),
           const SizedBox(height: 12),
 
-          // Список / сетка
           Expanded(
             child: materialsAsync.when(
               loading: () => const Center(child: CircularProgressIndicator()),
@@ -102,8 +159,7 @@ class _MaterialsListScreenState extends ConsumerState<MaterialsListScreen> {
                 ),
               ),
               data: (materials) {
-                // Фильтрация на фронте
-                final filtered = materials.where((m) {
+                var filtered = materials.where((m) {
                   final matchSearch =
                       _searchQuery.isEmpty ||
                       m.title.toLowerCase().contains(
@@ -115,19 +171,93 @@ class _MaterialsListScreenState extends ConsumerState<MaterialsListScreen> {
                   return matchSearch && matchCategory;
                 }).toList();
 
+                // Фильтр по автору для страницы преподавателя
+                if (widget.filterByCurrentUser && role != 'admin') {
+                  filtered = filtered
+                      .where((m) => m.authorId == currentUserId)
+                      .toList();
+                }
+
                 if (filtered.isEmpty) {
-                  return const Center(child: Text('Материалов не найдено'));
+                  return Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Text('Материалов не найдено'),
+                        if (widget.showActions) ...[
+                          const SizedBox(height: 16),
+                          FilledButton(
+                            onPressed: () => context.go('/upload'),
+                            child: const Text('Загрузить первый материал'),
+                          ),
+                        ],
+                      ],
+                    ),
+                  );
                 }
 
                 return _isGridView
-                    ? _MaterialsGrid(materials: filtered)
-                    : _MaterialsList(materials: filtered);
+                    ? _MaterialsGrid(
+                        materials: filtered,
+                        showActions: widget.showActions,
+                        onDelete: (m) => _confirmDelete(context, ref, m),
+                      )
+                    : _MaterialsList(
+                        materials: filtered,
+                        showActions: widget.showActions,
+                        onDelete: (m) => _confirmDelete(context, ref, m),
+                      );
               },
             ),
           ),
         ],
       ),
     );
+  }
+
+  Future<void> _confirmDelete(
+    BuildContext context,
+    WidgetRef ref,
+    domain.Material m,
+  ) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Удалить материал?'),
+        content: Text('«${m.title}» будет удалён безвозвратно.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('Отмена'),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(
+              backgroundColor: Theme.of(context).colorScheme.error,
+            ),
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: const Text('Удалить'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      try {
+        await ref.read(materialsRepositoryProvider).deleteMaterial(m.id);
+        ref.invalidate(materialsListProvider);
+        if (context.mounted) {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(const SnackBar(content: Text('Материал удалён')));
+        }
+      } catch (e) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('Ошибка удаления: $e')));
+        }
+      }
+    }
   }
 }
 
@@ -164,8 +294,15 @@ class _CategoryFilter extends StatelessWidget {
 // ─── ListView ────────────────────────────────────────────────────────────────
 
 class _MaterialsList extends StatelessWidget {
-  const _MaterialsList({required this.materials});
+  const _MaterialsList({
+    required this.materials,
+    required this.showActions,
+    required this.onDelete,
+  });
+
   final List<domain.Material> materials;
+  final bool showActions;
+  final void Function(domain.Material) onDelete;
 
   @override
   Widget build(BuildContext context) {
@@ -176,7 +313,11 @@ class _MaterialsList extends StatelessWidget {
       itemBuilder: (_, i) => InkWell(
         onTap: () => context.go('/materials/${materials[i].id}'),
         borderRadius: BorderRadius.circular(12),
-        child: _MaterialCard(material: materials[i]),
+        child: _MaterialCard(
+          material: materials[i],
+          showActions: showActions,
+          onDelete: () => onDelete(materials[i]),
+        ),
       ),
     );
   }
@@ -185,8 +326,15 @@ class _MaterialsList extends StatelessWidget {
 // ─── GridView ────────────────────────────────────────────────────────────────
 
 class _MaterialsGrid extends StatelessWidget {
-  const _MaterialsGrid({required this.materials});
+  const _MaterialsGrid({
+    required this.materials,
+    required this.showActions,
+    required this.onDelete,
+  });
+
   final List<domain.Material> materials;
+  final bool showActions;
+  final void Function(domain.Material) onDelete;
 
   @override
   Widget build(BuildContext context) {
@@ -199,7 +347,15 @@ class _MaterialsGrid extends StatelessWidget {
         childAspectRatio: 1.4,
       ),
       itemCount: materials.length,
-      itemBuilder: (_, i) => _MaterialCard(material: materials[i]),
+      itemBuilder: (_, i) => InkWell(
+        onTap: () => context.go('/materials/${materials[i].id}'),
+        borderRadius: BorderRadius.circular(12),
+        child: _MaterialCard(
+          material: materials[i],
+          showActions: showActions,
+          onDelete: () => onDelete(materials[i]),
+        ),
+      ),
     );
   }
 }
@@ -207,20 +363,21 @@ class _MaterialsGrid extends StatelessWidget {
 // ─── Карточка ────────────────────────────────────────────────────────────────
 
 class _MaterialCard extends StatelessWidget {
-  const _MaterialCard({required this.material});
+  const _MaterialCard({
+    required this.material,
+    required this.showActions,
+    required this.onDelete,
+  });
+
   final domain.Material material;
+  final bool showActions;
+  final VoidCallback onDelete;
 
   IconData _iconForMime(String mime) => switch (mime) {
     'application/pdf' => Icons.picture_as_pdf_outlined,
-    'application/vnd.openxmlformats-officedocument'
-        '.wordprocessingml.document' =>
-      Icons.description_outlined,
-    'application/vnd.openxmlformats-officedocument'
-        '.presentationml.presentation' =>
-      Icons.slideshow_outlined,
-    'application/vnd.openxmlformats-officedocument'
-        '.spreadsheetml.sheet' =>
-      Icons.table_chart_outlined,
+    String m when m.contains('word') => Icons.description_outlined,
+    String m when m.contains('presentation') => Icons.slideshow_outlined,
+    String m when m.contains('sheet') => Icons.table_chart_outlined,
     _ => Icons.insert_drive_file_outlined,
   };
 
@@ -281,19 +438,16 @@ class _MaterialCard extends StatelessWidget {
                   Wrap(
                     spacing: 8,
                     children: [
-                      // Тип файла
                       _Chip(
                         label: _ext(),
                         color: colorScheme.primaryContainer,
                         textColor: colorScheme.onPrimaryContainer,
                       ),
-                      // Размер
                       _Chip(
                         label: _formatSize(material.fileSize),
                         color: colorScheme.surfaceContainerHighest,
                         textColor: colorScheme.onSurfaceVariant,
                       ),
-                      // Скачивания
                       _Chip(
                         label: '↓ ${material.downloadCount}',
                         color: colorScheme.surfaceContainerHighest,
@@ -304,6 +458,25 @@ class _MaterialCard extends StatelessWidget {
                 ],
               ),
             ),
+
+            // Кнопки действий
+            if (showActions) ...[
+              const SizedBox(width: 8),
+              IconButton(
+                icon: const Icon(Icons.edit_outlined, size: 20),
+                tooltip: 'Редактировать',
+                onPressed: () => context.go('/materials/${material.id}/edit'),
+              ),
+              IconButton(
+                icon: Icon(
+                  Icons.delete_outlined,
+                  size: 20,
+                  color: colorScheme.error,
+                ),
+                tooltip: 'Удалить',
+                onPressed: onDelete,
+              ),
+            ],
           ],
         ),
       ),

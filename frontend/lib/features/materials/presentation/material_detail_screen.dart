@@ -5,6 +5,9 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:materials_repo/core/auth/auth_notifier.dart';
+import 'package:materials_repo/core/auth/auth_state.dart';
+import 'package:materials_repo/features/materials/data/materials_repository.dart';
 import 'package:web/web.dart' as web;
 
 import '../../../core/auth/dio_providers.dart';
@@ -27,10 +30,59 @@ class MaterialDetailScreen extends ConsumerWidget {
   String _formatDate(DateTime dt) =>
       '${dt.day.toString().padLeft(2, '0')}.${dt.month.toString().padLeft(2, '0')}.${dt.year}';
 
+  Future<void> _confirmDelete(
+    BuildContext context,
+    WidgetRef ref,
+    domain.Material material,
+  ) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Удалить материал?'),
+        content: Text('«${material.title}» будет удалён безвозвратно.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('Отмена'),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(
+              backgroundColor: Theme.of(context).colorScheme.error,
+            ),
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: const Text('Удалить'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      try {
+        await ref.read(materialsRepositoryProvider).deleteMaterial(material.id);
+        ref.invalidate(materialsListProvider);
+        if (context.mounted) context.go(AppRoutes.materials);
+      } catch (e) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('Ошибка удаления: $e')));
+        }
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final materialAsync = ref.watch(materialDetailProvider(materialId));
     final colorScheme = Theme.of(context).colorScheme;
+
+    final role = ref
+        .watch(authProvider)
+        .when(
+          loading: () => '',
+          unauthenticated: () => '',
+          authenticated: (user) => user.role,
+        );
 
     return Material(
       child: materialAsync.when(
@@ -59,7 +111,6 @@ class MaterialDetailScreen extends ConsumerWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Хлебные крошки
                   Row(
                     children: [
                       TextButton(
@@ -127,10 +178,36 @@ class MaterialDetailScreen extends ConsumerWidget {
                         ),
                       ),
                       const SizedBox(width: 16),
-                      FilledButton.icon(
-                        onPressed: () => _download(context, ref, material),
-                        icon: const Icon(Icons.download_outlined),
-                        label: const Text('Скачать'),
+                      // Кнопки
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          FilledButton.icon(
+                            onPressed: () => _download(context, ref, material),
+                            icon: const Icon(Icons.download_outlined),
+                            label: const Text('Скачать'),
+                          ),
+                          if (role == 'teacher' || role == 'admin') ...[
+                            const SizedBox(width: 8),
+                            OutlinedButton.icon(
+                              onPressed: () =>
+                                  context.go('/materials/${material.id}/edit'),
+                              icon: const Icon(Icons.edit_outlined),
+                              label: const Text('Редактировать'),
+                            ),
+                            const SizedBox(width: 8),
+                            OutlinedButton.icon(
+                              style: OutlinedButton.styleFrom(
+                                foregroundColor: colorScheme.error,
+                                side: BorderSide(color: colorScheme.error),
+                              ),
+                              onPressed: () =>
+                                  _confirmDelete(context, ref, material),
+                              icon: const Icon(Icons.delete_outlined),
+                              label: const Text('Удалить'),
+                            ),
+                          ],
+                        ],
                       ),
                     ],
                   ),
