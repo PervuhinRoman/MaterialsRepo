@@ -115,6 +115,15 @@ class AppShell extends ConsumerWidget {
 
                 if (role == 'teacher' || role == 'admin')
                   _NavItem(
+                    icon: Icons.person_outlined,
+                    selectedIcon: Icons.person,
+                    label: 'Преподавателям',
+                    selected: location.startsWith(AppRoutes.myMaterials),
+                    onTap: () => context.go(AppRoutes.myMaterials),
+                  ),
+
+                if (role == 'teacher' || role == 'admin')
+                  _NavItem(
                     icon: Icons.upload_file_outlined,
                     selectedIcon: Icons.upload_file,
                     label: 'Загрузить',
