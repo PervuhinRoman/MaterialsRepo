@@ -45,6 +45,9 @@ class MaterialsService:
             "text/plain",
             "image/jpeg",
             "image/png",
+            "application/zip",
+            "application/x-zip-compressed",
+            "application/octet-stream",
         }
 
         if file.content_type not in ALLOWED_MIME_TYPES:
