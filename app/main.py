@@ -29,6 +29,7 @@ app = FastAPI(
     version="0.1.0",
     description="API для хранения, систематизации и аналитики учебных материалов",
     lifespan=lifespan,
+    redirect_slashes=False,
 )
 
 # Порядок важен: сначала CORS, затем логирование
