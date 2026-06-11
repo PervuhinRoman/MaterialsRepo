@@ -92217,7 +92217,7 @@ n.m(0,"limit",20)
 m=J
 l=t.j
 s=3
-return A.S(p.a.MX("/materials/",n,o),$async$xh)
+return A.S(p.a.MX("/materials",n,o),$async$xh)
 case 3:o=m.i1(l.a(b.a),new A.af2(),t.c2)
 o=A.a_(o,o.$ti.h("aj.E"))
 q=o
