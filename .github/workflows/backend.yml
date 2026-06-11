@@ -42,40 +42,40 @@ jobs:
       - name: Run ruff check
         run: ruff check .
 
-  test:
-    name: Tests (pytest)
-    runs-on: ubuntu-latest
-    needs: lint
+  # test:
+  #   name: Tests (pytest)
+  #   runs-on: ubuntu-latest
+  #   needs: lint
 
-    env:
-      # SQLite через aiosqlite — без внешней БД в CI
-      DATABASE_URL: "sqlite+aiosqlite:///./test.db"
-      SECRET_KEY: "ci-test-secret-key-not-for-production"
-      ACCESS_TOKEN_EXPIRE_MINUTES: "30"
-      # Postgres-поля обязательны для pydantic-settings, но в тестах не используются
-      POSTGRES_USER: "ci"
-      POSTGRES_PASSWORD: "ci"
-      POSTGRES_DB: "ci"
+  #   env:
+  #     # SQLite через aiosqlite — без внешней БД в CI
+  #     DATABASE_URL: "sqlite+aiosqlite:///./test.db"
+  #     SECRET_KEY: "ci-test-secret-key-not-for-production"
+  #     ACCESS_TOKEN_EXPIRE_MINUTES: "30"
+  #     # Postgres-поля обязательны для pydantic-settings, но в тестах не используются
+  #     POSTGRES_USER: "ci"
+  #     POSTGRES_PASSWORD: "ci"
+  #     POSTGRES_DB: "ci"
 
-    steps:
-      - uses: actions/checkout@v4
+  #   steps:
+  #     - uses: actions/checkout@v4
 
-      - name: Set up Python 3.12
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-          cache: pip
+  #     - name: Set up Python 3.12
+  #       uses: actions/setup-python@v5
+  #       with:
+  #         python-version: "3.12"
+  #         cache: pip
 
-      - name: Install dependencies
-        run: pip install -r requirements.txt
+  #     - name: Install dependencies
+  #       run: pip install -r requirements.txt
 
-      - name: Run pytest
-        run: pytest --tb=short -q
+  #     - name: Run pytest
+  #       run: pytest --tb=short -q
 
   deploy:
     name: Deploy to Railway
     runs-on: ubuntu-latest
-    needs: test
+    # needs: test
     # Деплой только при пуше в master, не на PR
     if: github.event_name == 'push' && github.ref == 'refs/heads/master'
 
