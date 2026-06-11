@@ -29118,7 +29118,7 @@ q=s[1]
 s=s[2]
 p=b[2]
 return A.b([o*m+l*k+j*n,o*r+l*q+j*s,o*p[0]+l*p[1]+j*p[2]],t.n)},
-aOS(){var s,r=A.aSP("/api",B.FP,A.ar(["Content-Type","application/json"],t.N,t.z),B.G0),q=new A.ON(A.b([B.Db],t.i6))
+aOS(){var s,r=A.aSP("materialsrepo-production.up.railway.app",B.FP,A.ar(["Content-Type","application/json"],t.N,t.z),B.G0),q=new A.ON(A.b([B.Db],t.i6))
 q.O(q,B.JE)
 s=new A.Nq($,q,$,new A.a9W(51200),!1)
 s.Zy$=r
