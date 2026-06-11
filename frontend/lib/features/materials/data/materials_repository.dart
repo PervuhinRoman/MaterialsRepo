@@ -18,7 +18,7 @@ class MaterialsRepository {
     int? categoryId,
   }) async {
     final response = await _dio.get(
-      '/materials/',
+      '/materials',
       queryParameters: {
         'skip': (page - 1) * limit,
         'limit': limit,
