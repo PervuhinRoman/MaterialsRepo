@@ -83,6 +83,18 @@ async def update_material(
     return await repo.update(material_id, **data.model_dump(exclude_none=True))
 
 
+@router.patch("/{material_id}/file", response_model=MaterialOut)
+async def replace_material_file(
+    material_id: UUID,
+    file: UploadFile = File(...),
+    service: MaterialsService = Depends(get_materials_service),
+    current_user: User = Depends(require_role(Role.TEACHER, Role.ADMIN)),
+):
+    return await service.replace_file(
+        material_id, file, current_user.id, current_user.role.value
+    )
+
+
 @router.delete("/{material_id}", status_code=204)
 async def delete_material(
     material_id: UUID,
@@ -125,7 +137,7 @@ async def list_categories(
 async def create_category(
     data: CategoryCreate,
     service: MaterialsService = Depends(get_materials_service),
-    _: User = Depends(require_role(Role.ADMIN)),
+    _: User = Depends(require_role(Role.TEACHER, Role.ADMIN)),
 ):
     return await service.create_category(
         name=data.name,

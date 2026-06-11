@@ -52,7 +52,10 @@ jobs:
       DATABASE_URL: "sqlite+aiosqlite:///./test.db"
       SECRET_KEY: "ci-test-secret-key-not-for-production"
       ACCESS_TOKEN_EXPIRE_MINUTES: "30"
-      REFRESH_TOKEN_EXPIRE_DAYS: "7"
+      # Postgres-поля обязательны для pydantic-settings, но в тестах не используются
+      POSTGRES_USER: "ci"
+      POSTGRES_PASSWORD: "ci"
+      POSTGRES_DB: "ci"
 
     steps:
       - uses: actions/checkout@v4
