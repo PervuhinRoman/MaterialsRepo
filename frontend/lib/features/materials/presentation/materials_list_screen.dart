@@ -1,9 +1,15 @@
+import 'dart:js_interop';
+import 'dart:typed_data';
+
+import 'package:dio/dio.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:materials_repo/core/auth/auth_state.dart';
+import 'package:web/web.dart' as web;
 
 import '../../../core/auth/auth_notifier.dart';
+import '../../../core/auth/dio_providers.dart';
 import '../data/categories_repository.dart';
 import '../data/materials_provider.dart';
 import '../data/materials_repository.dart';
@@ -201,11 +207,13 @@ class _MaterialsListScreenState extends ConsumerState<MaterialsListScreen> {
                         materials: filtered,
                         showActions: widget.showActions,
                         onDelete: (m) => _confirmDelete(context, ref, m),
+                        onDownload: _download,
                       )
                     : _MaterialsList(
                         materials: filtered,
                         showActions: widget.showActions,
                         onDelete: (m) => _confirmDelete(context, ref, m),
+                        onDownload: _download,
                       );
               },
             ),
@@ -213,6 +221,35 @@ class _MaterialsListScreenState extends ConsumerState<MaterialsListScreen> {
         ],
       ),
     );
+  }
+
+  Future<void> _download(domain.Material m) async {
+    try {
+      final dio = ref.read(authenticatedDioProvider);
+      final response = await dio.get(
+        '/materials/${m.id}/download',
+        options: Options(responseType: ResponseType.bytes),
+      );
+      final bytes = response.data as List<int>;
+      final uint8Array = Uint8List.fromList(bytes);
+      final blob = web.Blob(
+        [uint8Array.toJS].toJS,
+        web.BlobPropertyBag(type: m.mimeType),
+      );
+      final url = web.URL.createObjectURL(blob);
+      final anchor = web.document.createElement('a') as web.HTMLAnchorElement;
+      anchor.href = url;
+      anchor.download = m.fileName;
+      anchor.click();
+      web.URL.revokeObjectURL(url);
+      ref.invalidate(materialsListProvider);
+    } on DioException catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Ошибка скачивания: ${e.message}')),
+        );
+      }
+    }
   }
 
   Future<void> _confirmDelete(
@@ -298,11 +335,13 @@ class _MaterialsList extends StatelessWidget {
     required this.materials,
     required this.showActions,
     required this.onDelete,
+    required this.onDownload,
   });
 
   final List<domain.Material> materials;
   final bool showActions;
   final void Function(domain.Material) onDelete;
+  final void Function(domain.Material) onDownload;
 
   @override
   Widget build(BuildContext context) {
@@ -317,6 +356,7 @@ class _MaterialsList extends StatelessWidget {
           material: materials[i],
           showActions: showActions,
           onDelete: () => onDelete(materials[i]),
+          onDownload: () => onDownload(materials[i]),
         ),
       ),
     );
@@ -330,11 +370,13 @@ class _MaterialsGrid extends StatelessWidget {
     required this.materials,
     required this.showActions,
     required this.onDelete,
+    required this.onDownload,
   });
 
   final List<domain.Material> materials;
   final bool showActions;
   final void Function(domain.Material) onDelete;
+  final void Function(domain.Material) onDownload;
 
   @override
   Widget build(BuildContext context) {
@@ -354,6 +396,7 @@ class _MaterialsGrid extends StatelessWidget {
           material: materials[i],
           showActions: showActions,
           onDelete: () => onDelete(materials[i]),
+          onDownload: () => onDownload(materials[i]),
         ),
       ),
     );
@@ -367,11 +410,13 @@ class _MaterialCard extends StatelessWidget {
     required this.material,
     required this.showActions,
     required this.onDelete,
+    required this.onDownload,
   });
 
   final domain.Material material;
   final bool showActions;
   final VoidCallback onDelete;
+  final VoidCallback onDownload;
 
   IconData _iconForMime(String mime) => switch (mime) {
     'application/pdf' => Icons.picture_as_pdf_outlined,
@@ -457,6 +502,13 @@ class _MaterialCard extends StatelessWidget {
                   ),
                 ],
               ),
+            ),
+
+            // Скачать — для всех пользователей
+            IconButton(
+              icon: const Icon(Icons.download_outlined, size: 20),
+              tooltip: 'Скачать',
+              onPressed: onDownload,
             ),
 
             // Кнопки действий
