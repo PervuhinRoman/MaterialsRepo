@@ -39,3 +39,7 @@ locust_report/
 
 # Docker
 *.log
+
+# CLAUDE
+CLAUDE.md
+.claude/
