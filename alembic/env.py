@@ -1,4 +1,3 @@
-# DIP: env.py зависит от абстракции Settings, не от os.environ напрямую
 import asyncio
 import os
 from logging.config import fileConfig
@@ -8,7 +7,7 @@ from alembic import context
 
 from app.core.config import get_settings
 from app.db.base import Base
-from app.db import registry  # noqa: F401 — регистрирует модели для автогенерации
+from app.db import registry  # noqa: F401
 
 config = context.config
 settings = get_settings()
@@ -18,10 +17,8 @@ if config.config_file_name is not None:
 
 target_metadata = Base.metadata
 
-# KISS: при локальном запуске Alembic используем localhost,
-# внутри Docker — хост db. Переключение через env-переменную.
-# db_url = os.getenv("DATABASE_URL_LOCAL") or settings.database_url
-db_url = settings.database_url_local or settings.database_url
+# KISS: локально берём LOCAL, в Railway — основной DATABASE_URL
+db_url = settings.get_async_database_url()
 
 
 def run_migrations_offline() -> None:
