@@ -81,7 +81,8 @@ jobs:
         run: flutter pub get
 
       - name: Build web
-        run: flutter build web --release --base-href /MaterialsRepo/
+        run: flutter build web --release --base-href /MaterialsRepo/ --dart-define=API_URL=${{ secrets.API_URL }}
+
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
