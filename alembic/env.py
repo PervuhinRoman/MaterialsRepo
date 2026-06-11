@@ -5,20 +5,31 @@ from logging.config import fileConfig
 from sqlalchemy.ext.asyncio import create_async_engine
 from alembic import context
 
-from app.core.config import get_settings
 from app.db.base import Base
 from app.db import registry  # noqa: F401
 
 config = context.config
-settings = get_settings()
 
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
 target_metadata = Base.metadata
 
-# KISS: локально берём LOCAL, в Railway — основной DATABASE_URL
-db_url = settings.get_async_database_url()
+
+def _get_db_url() -> str:
+    # KISS: читаем напрямую из окружения — работает и локально и в Railway
+    url = (
+        os.environ.get("DATABASE_URL_LOCAL")
+        or os.environ.get("DATABASE_URL")
+        or ""
+    )
+    # Railway даёт postgresql://, asyncpg требует postgresql+asyncpg://
+    if url.startswith("postgresql://"):
+        url = url.replace("postgresql://", "postgresql+asyncpg://", 1)
+    return url
+
+
+db_url = _get_db_url()
 
 
 def run_migrations_offline() -> None:
