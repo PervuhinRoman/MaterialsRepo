@@ -76,13 +76,17 @@ class MaterialDetailScreen extends ConsumerWidget {
     final materialAsync = ref.watch(materialDetailProvider(materialId));
     final colorScheme = Theme.of(context).colorScheme;
 
-    final role = ref
-        .watch(authProvider)
-        .when(
-          loading: () => '',
-          unauthenticated: () => '',
-          authenticated: (user) => user.role,
-        );
+    final authState = ref.watch(authProvider);
+    final role = authState.when(
+      loading: () => '',
+      unauthenticated: () => '',
+      authenticated: (user) => user.role,
+    );
+    final currentUserId = authState.when(
+      loading: () => '',
+      unauthenticated: () => '',
+      authenticated: (user) => user.id,
+    );
 
     return Material(
       child: materialAsync.when(
@@ -187,7 +191,7 @@ class MaterialDetailScreen extends ConsumerWidget {
                             icon: const Icon(Icons.download_outlined),
                             label: const Text('Скачать'),
                           ),
-                          if (role == 'teacher' || role == 'admin') ...[
+                          if (role == 'admin' || (role == 'teacher' && material.authorId == currentUserId)) ...[
                             const SizedBox(width: 8),
                             OutlinedButton.icon(
                               onPressed: () =>

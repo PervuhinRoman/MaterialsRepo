@@ -83,6 +83,53 @@ class MaterialsService:
         await self._analytics.log_event("upload", material.id, author_id)
         return material
 
+    async def replace_file(self, material_id, file: UploadFile, requester_id, requester_role):
+        ALLOWED_MIME_TYPES = {
+            "application/pdf",
+            "application/msword",
+            "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            "application/vnd.ms-powerpoint",
+            "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+            "text/plain",
+            "image/jpeg",
+            "image/png",
+            "application/zip",
+            "application/x-zip-compressed",
+            "application/octet-stream",
+        }
+        material = await self._repo.get(material_id)
+        if not material:
+            raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Материал не найден")
+        # RBAC: teacher заменяет только свои материалы
+        if requester_role == "teacher" and material.author_id != requester_id:
+            raise HTTPException(status.HTTP_403_FORBIDDEN, detail="Недостаточно прав")
+        if file.content_type not in ALLOWED_MIME_TYPES:
+            raise HTTPException(
+                status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
+                detail=f"Тип файла '{file.content_type}' не поддерживается",
+            )
+        content = await file.read()
+        if len(content) > settings.max_file_size_mb * 1024 * 1024:
+            raise HTTPException(
+                status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+                detail="Файл превышает допустимый размер",
+            )
+        if os.path.exists(material.file_path):
+            os.remove(material.file_path)
+        os.makedirs(settings.upload_dir, exist_ok=True)
+        ext = os.path.splitext(file.filename)[1]
+        stored_name = f"{uuid.uuid4()}{ext}"
+        file_path = os.path.join(settings.upload_dir, stored_name)
+        with open(file_path, "wb") as f:
+            f.write(content)
+        return await self._repo.update(
+            material_id,
+            file_path=file_path,
+            file_name=file.filename,
+            file_size=len(content),
+            mime_type=file.content_type,
+        )
+
     async def delete(self, material_id, requester_id, requester_role):
         material = await self._repo.get(material_id)
         if not material:
