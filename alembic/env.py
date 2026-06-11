@@ -7,6 +7,8 @@ from alembic import context
 
 from app.db.base import Base
 from app.db import registry  # noqa: F401
+from dotenv import load_dotenv
+load_dotenv()
 
 config = context.config
 

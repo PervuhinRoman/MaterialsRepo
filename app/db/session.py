@@ -1,5 +1,8 @@
 import os
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
+from dotenv import load_dotenv
+
+load_dotenv()  # загружаем .env для локальной разработки
 
 
 def _get_db_url() -> str:
