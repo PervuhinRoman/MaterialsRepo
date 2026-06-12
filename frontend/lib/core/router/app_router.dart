@@ -7,6 +7,7 @@ import '../../features/materials/presentation/material_edit_screen.dart';
 import '../../features/materials/presentation/material_detail_screen.dart';
 import '../../features/analytics/presentation/analytics_screen.dart';
 import '../../features/auth/presentation/login_screen.dart';
+import '../../features/auth/presentation/register_screen.dart';
 import '../../features/materials/presentation/materials_list_screen.dart';
 import '../../features/materials/presentation/upload_screen.dart';
 import '../../shared/widgets/app_shell.dart';
@@ -17,6 +18,7 @@ import '../../shared/widgets/loading_screen.dart';
 
 abstract final class AppRoutes {
   static const login = '/login';
+  static const register = '/register';
   static const loading = '/loading';
   static const materials = '/materials';
   static const materialDetail = '/materials/:id';
@@ -39,9 +41,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       return authState.when(
         // Идёт проверка токена — держим на loading
         loading: () => location == AppRoutes.loading ? null : AppRoutes.loading,
-        // Не авторизован — на логин
+        // Не авторизован — на логин (регистрация тоже доступна)
         unauthenticated: () =>
-            location == AppRoutes.login ? null : AppRoutes.login,
+            location == AppRoutes.login || location == AppRoutes.register
+                ? null
+                : AppRoutes.login,
         // Авторизован — с loading/login на материалы
         authenticated: (_) =>
             location == AppRoutes.login || location == AppRoutes.loading
@@ -58,6 +62,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: AppRoutes.login,
         name: 'login',
         builder: (context, state) => const LoginScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.register,
+        name: 'register',
+        builder: (context, state) => const RegisterScreen(),
       ),
       ShellRoute(
         builder: (context, state, child) => AppShell(child: child),

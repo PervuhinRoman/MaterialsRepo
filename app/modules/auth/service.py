@@ -12,7 +12,9 @@ class AuthService:
     def __init__(self, repo: UserRepository):
         self._repo = repo
 
-    async def register(self, email: str, username: str, password: str) -> User:
+    async def register(
+        self, email: str, username: str, password: str, role: str = "student"
+    ) -> User:
         # KISS: проверки — по одной, с понятными сообщениями
         if await self._repo.get_by_email(email):
             raise HTTPException(status.HTTP_400_BAD_REQUEST,
@@ -24,6 +26,7 @@ class AuthService:
             email=email,
             username=username,
             hashed_password=hash_password(password),
+            role=role,
         )
 
     async def login(self, email: str, password: str) -> dict:

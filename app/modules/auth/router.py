@@ -28,6 +28,7 @@ async def register(
         email=data.email,
         username=data.username,
         password=data.password,
+        role=data.role,
     )
 
 

@@ -6,25 +6,28 @@ import 'package:go_router/go_router.dart';
 import '../../../core/auth/auth_notifier.dart';
 import '../../../core/router/app_router.dart';
 
-class LoginScreen extends ConsumerStatefulWidget {
-  const LoginScreen({super.key});
+class RegisterScreen extends ConsumerStatefulWidget {
+  const RegisterScreen({super.key});
 
   @override
-  ConsumerState<LoginScreen> createState() => _LoginScreenState();
+  ConsumerState<RegisterScreen> createState() => _RegisterScreenState();
 }
 
-class _LoginScreenState extends ConsumerState<LoginScreen> {
+class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   final _emailController = TextEditingController();
+  final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
 
   bool _isPasswordVisible = false;
   bool _isLoading = false;
   String? _errorMessage;
+  String _selectedRole = 'student';
 
   @override
   void dispose() {
     _emailController.dispose();
+    _usernameController.dispose();
     _passwordController.dispose();
     super.dispose();
   }
@@ -38,18 +41,24 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     });
 
     try {
-      await ref.read(authProvider.notifier).login(
+      await ref.read(authProvider.notifier).register(
             email: _emailController.text.trim(),
+            username: _usernameController.text.trim(),
             password: _passwordController.text,
+            role: _selectedRole,
           );
     } on DioException catch (e) {
       final detail = e.response?.data?['detail'];
       setState(() {
-        _errorMessage = detail is String ? detail : 'Неверный email или пароль';
+        if (detail is String) {
+          _errorMessage = detail;
+        } else {
+          _errorMessage = 'Ошибка регистрации. Попробуйте ещё раз.';
+        }
       });
     } catch (_) {
       setState(() {
-        _errorMessage = 'Неверный email или пароль';
+        _errorMessage = 'Ошибка регистрации. Попробуйте ещё раз.';
       });
     } finally {
       if (mounted) {
@@ -104,13 +113,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       const SizedBox(height: 32),
 
                       Text(
-                        'Вход в систему',
+                        'Регистрация',
                         style: Theme.of(context).textTheme.titleLarge,
                         textAlign: TextAlign.center,
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        'Репозиторий учебных материалов',
+                        'Создайте учётную запись',
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                               color: colorScheme.onSurfaceVariant,
                             ),
@@ -134,6 +143,27 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           }
                           if (!value.contains('@')) {
                             return 'Некорректный email';
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 16),
+
+                      // Имя пользователя
+                      TextFormField(
+                        controller: _usernameController,
+                        textInputAction: TextInputAction.next,
+                        decoration: const InputDecoration(
+                          labelText: 'Имя пользователя',
+                          prefixIcon: Icon(Icons.person_outlined),
+                          border: OutlineInputBorder(),
+                        ),
+                        validator: (value) {
+                          if (value == null || value.trim().isEmpty) {
+                            return 'Введите имя пользователя';
+                          }
+                          if (value.trim().length < 3) {
+                            return 'Минимум 3 символа';
                           }
                           return null;
                         },
@@ -171,6 +201,32 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           return null;
                         },
                       ),
+                      const SizedBox(height: 16),
+
+                      // Роль
+                      DropdownButtonFormField<String>(
+                        initialValue: _selectedRole,
+                        decoration: const InputDecoration(
+                          labelText: 'Роль',
+                          prefixIcon: Icon(Icons.badge_outlined),
+                          border: OutlineInputBorder(),
+                        ),
+                        items: const [
+                          DropdownMenuItem(
+                            value: 'student',
+                            child: Text('Студент'),
+                          ),
+                          DropdownMenuItem(
+                            value: 'teacher',
+                            child: Text('Преподаватель'),
+                          ),
+                        ],
+                        onChanged: (value) {
+                          if (value != null) {
+                            setState(() => _selectedRole = value);
+                          }
+                        },
+                      ),
                       const SizedBox(height: 8),
 
                       // Ошибка
@@ -184,14 +240,15 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           ),
                           child: Text(
                             _errorMessage!,
-                            style: TextStyle(color: colorScheme.onErrorContainer),
+                            style:
+                                TextStyle(color: colorScheme.onErrorContainer),
                             textAlign: TextAlign.center,
                           ),
                         ),
                       ],
                       const SizedBox(height: 24),
 
-                      // Кнопка входа
+                      // Кнопка регистрации
                       FilledButton(
                         onPressed: _isLoading ? null : _submit,
                         child: _isLoading
@@ -203,31 +260,29 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                   color: Colors.white,
                                 ),
                               )
-                            : const Text('Войти'),
+                            : const Text('Зарегистрироваться'),
                       ),
                       const SizedBox(height: 16),
 
-                      // Ссылка на регистрацию
+                      // Ссылка на вход
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Text(
-                            'Нет аккаунта? ',
+                            'Уже есть аккаунт? ',
                             style: Theme.of(context)
                                 .textTheme
                                 .bodyMedium
-                                ?.copyWith(
-                                  color: colorScheme.onSurfaceVariant,
-                                ),
+                                ?.copyWith(color: colorScheme.onSurfaceVariant),
                           ),
                           TextButton(
-                            onPressed: () => context.go(AppRoutes.register),
+                            onPressed: () => context.go(AppRoutes.login),
                             style: TextButton.styleFrom(
                               padding: EdgeInsets.zero,
                               minimumSize: Size.zero,
                               tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                             ),
-                            child: const Text('Зарегистрироваться'),
+                            child: const Text('Войти'),
                           ),
                         ],
                       ),
