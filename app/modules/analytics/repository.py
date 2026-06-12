@@ -52,14 +52,16 @@ class LogRepository(AbstractRepository[AccessLog]):
         return True
 
     async def get_top_materials(self, limit: int = 10) -> List[dict]:
-        # Агрегация: топ материалов по числу обращений с JOIN для получения title
+        # Агрегация: топ материалов по числу скачиваний с JOIN для получения title
         result = await self._session.execute(
             select(
                 AccessLog.material_id,
                 func.count(AccessLog.id).label("count"),
                 MaterialModel.title.label("title"),
             )
-            .join(MaterialModel, AccessLog.material_id == MaterialModel.id, isouter=True)
+            .join(MaterialModel, AccessLog.material_id == MaterialModel.id)
+            .where(AccessLog.material_id.isnot(None))
+            .where(AccessLog.action == "download")
             .group_by(AccessLog.material_id, MaterialModel.title)
             .order_by(func.count(AccessLog.id).desc())
             .limit(limit)
