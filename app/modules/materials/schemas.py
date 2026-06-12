@@ -41,6 +41,8 @@ class MaterialOut(BaseModel):
     mime_type: str
     download_count: int
     author_id: UUID
+    author_username: Optional[str]
+    author_email: Optional[str]
     category_id: Optional[UUID]
     created_at: datetime
     updated_at: Optional[datetime]

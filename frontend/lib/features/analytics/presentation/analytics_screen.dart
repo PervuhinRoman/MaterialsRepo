@@ -200,6 +200,7 @@ class _TopMaterialsTable extends StatelessWidget {
       child: DataTable(
         columns: const [
           DataColumn(label: Text('#')),
+          DataColumn(label: Text('Название')),
           DataColumn(label: Text('ID материала')),
           DataColumn(label: Text('Скачиваний'), numeric: true),
         ],
@@ -209,6 +210,7 @@ class _TopMaterialsTable extends StatelessWidget {
           return DataRow(
             cells: [
               DataCell(Text('$index')),
+              DataCell(Text(item.title ?? '—')),
               DataCell(Text(item.materialId ?? '—')),
               DataCell(Text('${item.count}')),
             ],

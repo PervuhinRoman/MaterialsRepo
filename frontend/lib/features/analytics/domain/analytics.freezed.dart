@@ -287,7 +287,7 @@ as int,
 /// @nodoc
 mixin _$TopMaterial {
 
-@JsonKey(name: 'material_id') String? get materialId; int get count;
+@JsonKey(name: 'material_id') String? get materialId; String? get title; int get count;
 /// Create a copy of TopMaterial
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -300,16 +300,16 @@ $TopMaterialCopyWith<TopMaterial> get copyWith => _$TopMaterialCopyWithImpl<TopM
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is TopMaterial&&(identical(other.materialId, materialId) || other.materialId == materialId)&&(identical(other.count, count) || other.count == count));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is TopMaterial&&(identical(other.materialId, materialId) || other.materialId == materialId)&&(identical(other.title, title) || other.title == title)&&(identical(other.count, count) || other.count == count));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,materialId,count);
+int get hashCode => Object.hash(runtimeType,materialId,title,count);
 
 @override
 String toString() {
-  return 'TopMaterial(materialId: $materialId, count: $count)';
+  return 'TopMaterial(materialId: $materialId, title: $title, count: $count)';
 }
 
 
@@ -320,7 +320,7 @@ abstract mixin class $TopMaterialCopyWith<$Res>  {
   factory $TopMaterialCopyWith(TopMaterial value, $Res Function(TopMaterial) _then) = _$TopMaterialCopyWithImpl;
 @useResult
 $Res call({
-@JsonKey(name: 'material_id') String? materialId, int count
+@JsonKey(name: 'material_id') String? materialId, String? title, int count
 });
 
 
@@ -337,9 +337,10 @@ class _$TopMaterialCopyWithImpl<$Res>
 
 /// Create a copy of TopMaterial
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? materialId = freezed,Object? count = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? materialId = freezed,Object? title = freezed,Object? count = null,}) {
   return _then(_self.copyWith(
 materialId: freezed == materialId ? _self.materialId : materialId // ignore: cast_nullable_to_non_nullable
+as String?,title: freezed == title ? _self.title : title // ignore: cast_nullable_to_non_nullable
 as String?,count: null == count ? _self.count : count // ignore: cast_nullable_to_non_nullable
 as int,
   ));
@@ -426,10 +427,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@JsonKey(name: 'material_id')  String? materialId,  int count)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@JsonKey(name: 'material_id')  String? materialId,  String? title,  int count)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _TopMaterial() when $default != null:
-return $default(_that.materialId,_that.count);case _:
+return $default(_that.materialId,_that.title,_that.count);case _:
   return orElse();
 
 }
@@ -447,10 +448,10 @@ return $default(_that.materialId,_that.count);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@JsonKey(name: 'material_id')  String? materialId,  int count)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@JsonKey(name: 'material_id')  String? materialId,  String? title,  int count)  $default,) {final _that = this;
 switch (_that) {
 case _TopMaterial():
-return $default(_that.materialId,_that.count);case _:
+return $default(_that.materialId,_that.title,_that.count);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -467,10 +468,10 @@ return $default(_that.materialId,_that.count);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@JsonKey(name: 'material_id')  String? materialId,  int count)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@JsonKey(name: 'material_id')  String? materialId,  String? title,  int count)?  $default,) {final _that = this;
 switch (_that) {
 case _TopMaterial() when $default != null:
-return $default(_that.materialId,_that.count);case _:
+return $default(_that.materialId,_that.title,_that.count);case _:
   return null;
 
 }
@@ -482,10 +483,11 @@ return $default(_that.materialId,_that.count);case _:
 @JsonSerializable()
 
 class _TopMaterial implements TopMaterial {
-  const _TopMaterial({@JsonKey(name: 'material_id') required this.materialId, required this.count});
+  const _TopMaterial({@JsonKey(name: 'material_id') required this.materialId, required this.title, required this.count});
   factory _TopMaterial.fromJson(Map<String, dynamic> json) => _$TopMaterialFromJson(json);
 
 @override@JsonKey(name: 'material_id') final  String? materialId;
+@override final  String? title;
 @override final  int count;
 
 /// Create a copy of TopMaterial
@@ -501,16 +503,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _TopMaterial&&(identical(other.materialId, materialId) || other.materialId == materialId)&&(identical(other.count, count) || other.count == count));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _TopMaterial&&(identical(other.materialId, materialId) || other.materialId == materialId)&&(identical(other.title, title) || other.title == title)&&(identical(other.count, count) || other.count == count));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,materialId,count);
+int get hashCode => Object.hash(runtimeType,materialId,title,count);
 
 @override
 String toString() {
-  return 'TopMaterial(materialId: $materialId, count: $count)';
+  return 'TopMaterial(materialId: $materialId, title: $title, count: $count)';
 }
 
 
@@ -521,7 +523,7 @@ abstract mixin class _$TopMaterialCopyWith<$Res> implements $TopMaterialCopyWith
   factory _$TopMaterialCopyWith(_TopMaterial value, $Res Function(_TopMaterial) _then) = __$TopMaterialCopyWithImpl;
 @override @useResult
 $Res call({
-@JsonKey(name: 'material_id') String? materialId, int count
+@JsonKey(name: 'material_id') String? materialId, String? title, int count
 });
 
 
@@ -538,9 +540,10 @@ class __$TopMaterialCopyWithImpl<$Res>
 
 /// Create a copy of TopMaterial
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? materialId = freezed,Object? count = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? materialId = freezed,Object? title = freezed,Object? count = null,}) {
   return _then(_TopMaterial(
 materialId: freezed == materialId ? _self.materialId : materialId // ignore: cast_nullable_to_non_nullable
+as String?,title: freezed == title ? _self.title : title // ignore: cast_nullable_to_non_nullable
 as String?,count: null == count ? _self.count : count // ignore: cast_nullable_to_non_nullable
 as int,
   ));

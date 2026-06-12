@@ -39,3 +39,11 @@ class Material(Base):
     author = relationship("User", back_populates="materials")
     category = relationship("Category", back_populates="materials")
     access_logs = relationship("AccessLog", back_populates="material")
+
+    @property
+    def author_username(self):
+        return self.author.username if self.author else None
+
+    @property
+    def author_email(self):
+        return self.author.email if self.author else None

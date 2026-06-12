@@ -2,6 +2,7 @@
 from typing import List, Optional
 from uuid import UUID
 from sqlalchemy import select
+from sqlalchemy.orm import selectinload
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.repository import AbstractRepository
@@ -15,13 +16,13 @@ class MaterialRepository(AbstractRepository[Material]):
 
     async def get(self, id: UUID) -> Optional[Material]:
         result = await self._session.execute(
-            select(Material).where(Material.id == id)
+            select(Material).options(selectinload(Material.author)).where(Material.id == id)
         )
         return result.scalar_one_or_none()
 
     async def get_all(self, skip: int = 0, limit: int = 100) -> List[Material]:
         result = await self._session.execute(
-            select(Material).offset(skip).limit(limit)
+            select(Material).options(selectinload(Material.author)).offset(skip).limit(limit)
         )
         return list(result.scalars().all())
 
@@ -35,8 +36,7 @@ class MaterialRepository(AbstractRepository[Material]):
         material = Material(**kwargs)
         self._session.add(material)
         await self._session.commit()
-        await self._session.refresh(material)
-        return material
+        return await self.get(material.id)
 
     async def update(self, id: UUID, **kwargs) -> Optional[Material]:
         material = await self.get(id)
@@ -45,8 +45,7 @@ class MaterialRepository(AbstractRepository[Material]):
         for key, value in kwargs.items():
             setattr(material, key, value)
         await self._session.commit()
-        await self._session.refresh(material)
-        return material
+        return await self.get(id)
 
     async def delete(self, id: UUID) -> bool:
         material = await self.get(id)

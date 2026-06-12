@@ -24,11 +24,13 @@ Map<String, dynamic> _$SummaryStatsToJson(_SummaryStats instance) =>
 
 _TopMaterial _$TopMaterialFromJson(Map<String, dynamic> json) => _TopMaterial(
   materialId: json['material_id'] as String?,
+  title: json['title'] as String?,
   count: (json['count'] as num).toInt(),
 );
 
 Map<String, dynamic> _$TopMaterialToJson(_TopMaterial instance) =>
     <String, dynamic>{
       'material_id': instance.materialId,
+      'title': instance.title,
       'count': instance.count,
     };

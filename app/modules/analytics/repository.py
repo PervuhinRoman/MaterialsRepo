@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.repository import AbstractRepository
 from app.modules.analytics.models import AccessLog
+from app.modules.materials.models import Material as MaterialModel
 
 
 class LogRepository(AbstractRepository[AccessLog]):
@@ -51,12 +52,19 @@ class LogRepository(AbstractRepository[AccessLog]):
         return True
 
     async def get_top_materials(self, limit: int = 10) -> List[dict]:
-        # Агрегация: топ материалов по числу обращений
+        # Агрегация: топ материалов по числу обращений с JOIN для получения title
         result = await self._session.execute(
-            select(AccessLog.material_id, func.count(AccessLog.id).label("count"))
-            .group_by(AccessLog.material_id)
+            select(
+                AccessLog.material_id,
+                func.count(AccessLog.id).label("count"),
+                MaterialModel.title.label("title"),
+            )
+            .join(MaterialModel, AccessLog.material_id == MaterialModel.id, isouter=True)
+            .group_by(AccessLog.material_id, MaterialModel.title)
             .order_by(func.count(AccessLog.id).desc())
             .limit(limit)
         )
-        return [{"material_id": row.material_id, "count": row.count}
-                for row in result.all()]
+        return [
+            {"material_id": row.material_id, "count": row.count, "title": row.title}
+            for row in result.all()
+        ]

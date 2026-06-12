@@ -20,6 +20,7 @@ abstract class SummaryStats with _$SummaryStats {
 abstract class TopMaterial with _$TopMaterial {
   const factory TopMaterial({
     @JsonKey(name: 'material_id') required String? materialId,
+    required String? title,
     required int count,
   }) = _TopMaterial;
 
