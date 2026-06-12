@@ -5,11 +5,11 @@ from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.session import get_db
-from app.core.dependencies import get_current_user
+from app.core.dependencies import get_current_user, require_role
 from app.modules.auth.repository import UserRepository
 from app.modules.auth.service import AuthService
-from app.modules.auth.schemas import UserRegister, UserOut, TokenOut
-from app.modules.auth.models import User
+from app.modules.auth.schemas import UserRegister, UserOut, TokenOut, UserSetActive
+from app.modules.auth.models import User, Role
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -45,3 +45,26 @@ async def login(
 @router.get("/me", response_model=UserOut)
 async def me(current_user: User = Depends(get_current_user)):
     return current_user
+
+
+@router.get("/users", response_model=list[UserOut])
+async def list_users(
+    service: AuthService = Depends(get_auth_service),
+    _: User = Depends(require_role(Role.ADMIN)),
+):
+    return await service.list_users()
+
+
+@router.patch("/users/{user_id}", response_model=UserOut)
+async def set_user_active(
+    user_id: str,
+    body: UserSetActive,
+    service: AuthService = Depends(get_auth_service),
+    _: User = Depends(require_role(Role.ADMIN)),
+):
+    from uuid import UUID
+    user = await service.set_active(UUID(user_id), body.is_active)
+    if user is None:
+        from fastapi import HTTPException, status
+        raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Пользователь не найден")
+    return user

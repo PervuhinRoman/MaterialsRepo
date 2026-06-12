@@ -35,3 +35,7 @@ class UserOut(BaseModel):
 class TokenOut(BaseModel):
     access_token: str
     token_type: str
+
+
+class UserSetActive(BaseModel):
+    is_active: bool

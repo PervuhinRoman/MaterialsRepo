@@ -6,6 +6,7 @@ import '../../features/materials/presentation/my_materials_screen.dart';
 import '../../features/materials/presentation/material_edit_screen.dart';
 import '../../features/materials/presentation/material_detail_screen.dart';
 import '../../features/analytics/presentation/analytics_screen.dart';
+import '../../features/users/presentation/users_screen.dart';
 import '../../features/auth/presentation/login_screen.dart';
 import '../../features/auth/presentation/register_screen.dart';
 import '../../features/materials/presentation/materials_list_screen.dart';
@@ -26,6 +27,7 @@ abstract final class AppRoutes {
   static const myMaterials = '/my-materials';
   static const upload = '/upload';
   static const analytics = '/analytics';
+  static const users = '/users';
 }
 
 final appRouterProvider = Provider<GoRouter>((ref) {
@@ -106,6 +108,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             path: AppRoutes.analytics,
             name: 'analytics',
             builder: (context, state) => const AnalyticsScreen(),
+          ),
+          GoRoute(
+            path: AppRoutes.users,
+            name: 'users',
+            builder: (context, state) => const UsersScreen(),
           ),
         ],
       ),
