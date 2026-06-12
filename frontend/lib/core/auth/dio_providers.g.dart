@@ -48,7 +48,7 @@ final class TokenStorageProvider
   }
 }
 
-String _$tokenStorageHash() => r'685c5e3ecbe57f43cb7d757fc51e85d8590845e3';
+String _$tokenStorageHash() => r'73099df95d2bc544cbc34e130cef5de1ac248e8e';
 
 @ProviderFor(unauthenticatedDio)
 final unauthenticatedDioProvider = UnauthenticatedDioProvider._();
@@ -92,16 +92,11 @@ final class UnauthenticatedDioProvider
 String _$unauthenticatedDioHash() =>
     r'7827abc1687d8e691ec16d66c774d725b108a299';
 
-/// Dio без onUnauthenticated — колбэк подключается в main.dart
-
 @ProviderFor(authenticatedDio)
 final authenticatedDioProvider = AuthenticatedDioProvider._();
 
-/// Dio без onUnauthenticated — колбэк подключается в main.dart
-
 final class AuthenticatedDioProvider extends $FunctionalProvider<Dio, Dio, Dio>
     with $Provider<Dio> {
-  /// Dio без onUnauthenticated — колбэк подключается в main.dart
   AuthenticatedDioProvider._()
     : super(
         from: null,

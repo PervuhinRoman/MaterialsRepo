@@ -229,6 +229,16 @@ class MaterialDetailScreen extends ConsumerWidget {
                             style: Theme.of(context).textTheme.titleMedium,
                           ),
                           const SizedBox(height: 16),
+                          if (material.authorUsername != null)
+                            _MetaRow(
+                              label: 'Автор',
+                              value: material.authorUsername!,
+                            ),
+                          if (material.authorEmail != null)
+                            _MetaRow(
+                              label: 'Email автора',
+                              value: material.authorEmail!,
+                            ),
                           _MetaRow(
                             label: 'Имя файла',
                             value: material.fileName,

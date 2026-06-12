@@ -43,3 +43,6 @@ locust_report/
 # CLAUDE
 CLAUDE.md
 .claude/
+
+#SQL & DB
+*.sql

@@ -1,14 +1,19 @@
 # ISP: отдельные схемы для входа и выхода — клиент получает только нужные поля
+from typing import Literal
 from pydantic import BaseModel, EmailStr
 from uuid import UUID
 from datetime import datetime
 from app.modules.auth.models import Role
+
+# OCP: допустимые для самостоятельной регистрации роли — не admin
+RegistrationRole = Literal[Role.STUDENT, Role.TEACHER]
 
 
 class UserRegister(BaseModel):
     email: EmailStr
     username: str
     password: str
+    role: RegistrationRole = Role.STUDENT
 
 
 class UserLogin(BaseModel):
@@ -30,3 +35,7 @@ class UserOut(BaseModel):
 class TokenOut(BaseModel):
     access_token: str
     token_type: str
+
+
+class UserSetActive(BaseModel):
+    is_active: bool

@@ -32,4 +32,5 @@ class SummaryOut(BaseModel):
 
 class TopMaterialOut(BaseModel):
     material_id: Optional[UUID]
+    title: Optional[str]
     count: int

@@ -15,6 +15,8 @@ _Material _$MaterialFromJson(Map<String, dynamic> json) => _Material(
   mimeType: json['mime_type'] as String,
   downloadCount: (json['download_count'] as num).toInt(),
   authorId: json['author_id'] as String,
+  authorUsername: json['author_username'] as String?,
+  authorEmail: json['author_email'] as String?,
   categoryId: json['category_id'] as String?,
   createdAt: DateTime.parse(json['created_at'] as String),
   updatedAt: json['updated_at'] == null
@@ -31,6 +33,8 @@ Map<String, dynamic> _$MaterialToJson(_Material instance) => <String, dynamic>{
   'mime_type': instance.mimeType,
   'download_count': instance.downloadCount,
   'author_id': instance.authorId,
+  'author_username': instance.authorUsername,
+  'author_email': instance.authorEmail,
   'category_id': instance.categoryId,
   'created_at': instance.createdAt.toIso8601String(),
   'updated_at': instance.updatedAt?.toIso8601String(),

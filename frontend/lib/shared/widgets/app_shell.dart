@@ -140,6 +140,15 @@ class AppShell extends ConsumerWidget {
                     onTap: () => context.go(AppRoutes.analytics),
                   ),
 
+                if (role == 'admin')
+                  _NavItem(
+                    icon: Icons.people_outlined,
+                    selectedIcon: Icons.people,
+                    label: 'Пользователи',
+                    selected: location.startsWith(AppRoutes.users),
+                    onTap: () => context.go(AppRoutes.users),
+                  ),
+
                 const Spacer(),
                 const Divider(),
 

@@ -41,43 +41,59 @@ class AuthNotifier extends _$AuthNotifier {
   }
 
   Future<void> login({required String email, required String password}) async {
-    state = const AuthState.loading();
+    final dio = ref.read(unauthenticatedDioProvider);
+    final response = await dio.post(
+      '/auth/login',
+      data: {'username': email, 'password': password},
+      options: Options(contentType: 'application/x-www-form-urlencoded'),
+    );
 
-    try {
-      final dio = ref.read(unauthenticatedDioProvider);
-      final response = await dio.post(
-        '/auth/login',
-        data: {'username': email, 'password': password},
-        options: Options(contentType: 'application/x-www-form-urlencoded'),
-      );
+    final accessToken = response.data['access_token'] as String;
+    final refreshToken = response.data['refresh_token'] as String? ?? '';
 
-      final accessToken = response.data['access_token'] as String;
-      final refreshToken = response.data['refresh_token'] as String? ?? '';
+    await ref
+        .read(tokenStorageProvider)
+        .saveTokens(accessToken: accessToken, refreshToken: refreshToken);
 
-      await ref
-          .read(tokenStorageProvider)
-          .saveTokens(accessToken: accessToken, refreshToken: refreshToken);
+    // Инвалидируем кэшированный Dio — следующий read создаст новый
+    // экземпляр который подхватит токен через AuthInterceptor
+    ref.invalidate(authenticatedDioProvider);
 
-      // Инвалидируем кэшированный Dio — следующий read создаст новый
-      // экземпляр который подхватит токен через AuthInterceptor
-      ref.invalidate(authenticatedDioProvider);
+    final profileResponse = await ref
+        .read(authenticatedDioProvider)
+        .get('/auth/me');
+    final user = AuthUser(
+      id: profileResponse.data['id'] as String,
+      email: profileResponse.data['email'] as String,
+      username: profileResponse.data['username'] as String,
+      role: profileResponse.data['role'] as String,
+      isActive: profileResponse.data['is_active'] as bool,
+    );
 
-      final profileResponse = await ref
-          .read(authenticatedDioProvider)
-          .get('/auth/me');
-      final user = AuthUser(
-        id: profileResponse.data['id'] as String,
-        email: profileResponse.data['email'] as String,
-        username: profileResponse.data['username'] as String,
-        role: profileResponse.data['role'] as String,
-        isActive: profileResponse.data['is_active'] as bool,
-      );
+    state = AuthState.authenticated(user: user);
+  }
 
-      state = AuthState.authenticated(user: user);
-    } on DioException {
-      state = const AuthState.unauthenticated();
-      rethrow;
-    }
+  Future<void> register({
+    required String email,
+    required String username,
+    required String password,
+    required String role,
+  }) async {
+    // Не меняем state до успешного входа — иначе GoRouter редиректит
+    // на /login раньше, чем экран регистрации покажет ошибку
+    final dio = ref.read(unauthenticatedDioProvider);
+    await dio.post(
+      '/auth/register',
+      data: {
+        'email': email,
+        'username': username,
+        'password': password,
+        'role': role,
+      },
+    );
+
+    // После регистрации сразу выполняем вход
+    await login(email: email, password: password);
   }
 
   Future<void> logout() async {

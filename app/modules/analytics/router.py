@@ -67,9 +67,9 @@ async def export_csv(
     writer.writerow([])
 
     # Топ материалов
-    writer.writerow(["ID материала", "Число обращений"])
+    writer.writerow(["ID материала", "Название", "Число обращений"])
     for row in top:
-        writer.writerow([row["material_id"], row["count"]])
+        writer.writerow([row["material_id"], row.get("title", ""), row["count"]])
 
     output.seek(0)
     return StreamingResponse(

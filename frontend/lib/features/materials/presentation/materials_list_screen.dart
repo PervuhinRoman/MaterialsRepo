@@ -468,6 +468,36 @@ class _MaterialCard extends StatelessWidget {
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
+                  const SizedBox(height: 2),
+                  Row(
+                    children: [
+                      const Icon(Icons.person_outline, size: 12),
+                      const SizedBox(width: 4),
+                      Flexible(
+                        child: Text(
+                          material.authorUsername ?? '—',
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(color: colorScheme.onSurfaceVariant),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      if (material.authorEmail != null) ...[
+                        const SizedBox(width: 8),
+                        const Icon(Icons.email_outlined, size: 12),
+                        const SizedBox(width: 4),
+                        Flexible(
+                          child: Text(
+                            material.authorEmail!,
+                            style: Theme.of(context).textTheme.bodySmall
+                                ?.copyWith(color: colorScheme.onSurfaceVariant),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
                   if (material.description != null) ...[
                     const SizedBox(height: 2),
                     Text(

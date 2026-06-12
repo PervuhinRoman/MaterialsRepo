@@ -71,22 +71,3 @@ jobs:
 
   #     - name: Run pytest
   #       run: pytest --tb=short -q
-
-  deploy:
-    name: Deploy to Railway
-    runs-on: ubuntu-latest
-    # needs: test
-    # Деплой только при пуше в master, не на PR
-    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Install Railway CLI
-        run: npm install -g @railway/cli
-
-      - name: Deploy
-        env:
-          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
-        # Деплой сервиса; имя сервиса задаётся через RAILWAY_SERVICE
-        run: railway up --service ${{ vars.RAILWAY_SERVICE }} --detach
